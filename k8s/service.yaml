@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: banking-reporting-microservice
+  namespace: reporting
+spec:
+  selector:
+    app: banking-reporting-microservice
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

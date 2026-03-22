@@ -1,0 +1,151 @@
+{
+  "info": {
+    "name": "Banking Reporting Microservice",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Collection for demo JWT auth, CSRF bootstrap, report creation, querying, execution, and artifact download."
+  },
+  "item": [
+    {
+      "name": "Auth - Get JWT",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"report-admin\",\n  \"password\": \"changeit-admin\"\n}"
+        },
+        "url": "{{baseUrl}}/auth/token"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "pm.environment.set('jwtToken', json.accessToken);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Portal - Get CSRF",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/portal/security/csrf"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "pm.environment.set('csrfToken', json.token);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "API - Create Report",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwtToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"reportCode\": \"RPT-AML-001\",\n  \"name\": \"Daily AML Report\",\n  \"reportType\": \"AML\",\n  \"tenantId\": \"tenant-a\",\n  \"criteriaJson\": \"{\\\"fromDate\\\":\\\"2026-03-01\\\",\\\"toDate\\\":\\\"2026-03-20\\\"}\"\n}"
+        },
+        "url": "{{baseUrl}}/api/reports"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "pm.environment.set('reportId', json.id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "API - Get Report",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwtToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/reports/{{reportId}}"
+      }
+    },
+    {
+      "name": "API - Run Report",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwtToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"requestedBy\": \"report-admin\"\n}"
+        },
+        "url": "{{baseUrl}}/api/reports/{{reportId}}/run"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "if (json.recentExecutions && json.recentExecutions.length > 0) {",
+              "  pm.environment.set('executionId', json.recentExecutions[0].id);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "API - Download Artifact",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwtToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/reports/executions/{{executionId}}/artifact"
+      }
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+spring:
+  application:
+    name: banking-reporting-microservice
+  datasource:
+    url: jdbc:postgresql://localhost:5432/reporting
+    username: reporting_user
+    password: reporting_password
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+  security:
+    user:
+      name: portal-admin
+      password: changeit-browser
+
+server:
+  forward-headers-strategy: framework
+  error:
+    include-message: never
+    include-stacktrace: never
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        secure: false
+        same-site: lax
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: always
+  info:
+    env:
+      enabled: true
+
+info:
+  app:
+    name: Banking Reporting Microservice
+    security-model: Browser CSRF + stateless JWT API + suspicious traffic throttling
+
+app:
+  security:
+    jwt:
+      secret-base64: c3VwZXItc2VjdXJlLWxvY2FsLWRldmVsb3BtZW50LWtleS1mb3Itand0LXRva2VuLTIwMjYtMDE=
+      expiration-seconds: 3600
+    cors:
+      allowed-origins:
+        - http://localhost:3000
+    browser:
+      allowed-origins:
+        - http://localhost:8080
+        - http://localhost:3000
+    throttle:
+      window-seconds: 60
+      max-requests-per-window: 30
+      deny-seconds: 900
+      trusted-application-prefixes:
+        - /api/
+        - /auth/
+        - /portal/
+        - /actuator/
+        - /error
+    proxy:
+      trusted-forwarder-addresses:
+        - 127.0.0.1
+        - ::1
